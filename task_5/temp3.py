@@ -3,10 +3,9 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import numpy as np
-from visual_tree import animate_traversal
 
 class Node:
-    def __init__(self, key, color="#bbbbbb"):
+    def __init__(self, key, color="#000000"):
         self.left = None
         self.right = None
         self.val = key
@@ -28,6 +27,18 @@ def add_edges(graph, node, pos, x=0, y=0, layer=1):
             r = add_edges(graph, node.right, pos, x=r, y=y - 1, layer=layer + 1)
     return graph
 
+def draw_tree(tree_root):
+    tree = nx.DiGraph()
+    pos = {tree_root.id: (0, 0)}
+    tree = add_edges(tree, tree_root, pos)
+
+    colors = [node[1]['color'] for node in tree.nodes(data=True)]
+    labels = {node[0]: node[1]['label'] for node in tree.nodes(data=True)}  # Використовуйте значення вузла для міток
+
+    plt.figure(figsize=(12, 8))
+    nx.draw(tree, pos=pos, labels=labels, arrows=False, node_size=2500, node_color=colors)
+    plt.show()
+
 def build_heap_tree(heap):
     n = len(heap)
     nodes = [Node(heap[i]) for i in range(n)]
@@ -43,42 +54,31 @@ def build_heap_tree(heap):
     return nodes[0] if nodes else None
 
 def get_color_gradient(n):
-    """Generate n colors ranging from dark to light."""
+    """Generate n colors ranging from base color to white."""
     base_color = np.array(mcolors.hex2color("#1296F0"))
-    colors = [mcolors.to_hex((1 - i / n) * base_color) for i in range(n)]
+    white = np.array([1, 1, 1])
+    colors = [mcolors.to_hex(base_color + (white - base_color) * (i / (n - 1))) for i in range(n)]
     return colors
 
-def dfs_collect_steps(node, colors, index, steps):
+def dfs(node, colors, index):
     if node:
         node.color = colors[index[0]]
-        steps.append((node, node.color))  # Збираємо кроки для анімації
         index[0] += 1
-        dfs_collect_steps(node.left, colors, index, steps)
-        dfs_collect_steps(node.right, colors, index, steps)
+        draw_tree(root)  # Draw tree at each step with the root to show the full tree
+        dfs(node.left, colors, index)
+        dfs(node.right, colors, index)
 
-def bfs_collect_steps(root, colors, steps):
+def bfs(root, colors):
     queue = [root]
     index = 0
     while queue:
         current = queue.pop(0)
         if current:
             current.color = colors[index]
-            steps.append((current, current.color))  # Збираємо кроки для анімації
             index += 1
+            draw_tree(root)  # Draw tree at each step
             queue.append(current.left)
             queue.append(current.right)
-
-def draw_tree(tree_root):
-    tree = nx.DiGraph()
-    pos = {tree_root.id: (0, 0)}
-    tree = add_edges(tree, tree_root, pos)
-
-    colors = [node[1]['color'] for node in tree.nodes(data=True)]
-    labels = {node[0]: node[1]['label'] for node in tree.nodes(data=True)}  # Використовуйте значення вузла для міток
-
-    plt.figure(figsize=(12, 8))
-    nx.draw(tree, pos=pos, labels=labels, arrows=False, node_size=2500, node_color=colors)
-    plt.show()
 
 # Приклад використання
 if __name__ == "__main__":
@@ -88,16 +88,12 @@ if __name__ == "__main__":
     print("Первинне дерево:")
     draw_tree(root)
 
-    # Обхід в глибину
+    print("Обхід в глибину:")
     colors_dfs = get_color_gradient(len(heap))
-    dfs_steps = []
     dfs_index = [0]
-    dfs_collect_steps(root, colors_dfs, dfs_index, dfs_steps)
-    animate_traversal(dfs_steps)  # Анімація обходу в глибину
+    dfs(root, colors_dfs, dfs_index)
 
-    # Обхід в ширину
+    print("Обхід в ширину:")
     root = build_heap_tree(heap)  # Перезібрати дерево для нового обходу
     colors_bfs = get_color_gradient(len(heap))
-    bfs_steps = []
-    bfs_collect_steps(root, colors_bfs, bfs_steps)
-    animate_traversal(bfs_steps)  # Анімація обходу в ширину
+    bfs(root, colors_bfs)
