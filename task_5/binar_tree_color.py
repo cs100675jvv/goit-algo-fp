@@ -5,7 +5,7 @@ import matplotlib.colors as mcolors
 import numpy as np
 
 class Node:
-    def __init__(self, key, color="#000000"):
+    def __init__(self, key, color="#060085"):
         self.left = None
         self.right = None
         self.val = key
@@ -54,9 +54,10 @@ def build_heap_tree(heap):
     return nodes[0] if nodes else None
 
 def get_color_gradient(n):
-    """Generate n colors ranging from dark to light."""
-    base_color = np.array(mcolors.hex2color("#1296F0"))
-    colors = [mcolors.to_hex((1 - i / n) * base_color) for i in range(n)]
+    """Generate n colors ranging from base color to light."""
+    base_color = np.array(mcolors.hex2color("#060085"))
+    light_color = np.array(mcolors.hex2color("#8680ff"))
+    colors = [mcolors.to_hex(base_color + (light_color - base_color) * (i / (n - 1))) for i in range(n)]
     return colors
 
 def dfs(node, colors, index):
